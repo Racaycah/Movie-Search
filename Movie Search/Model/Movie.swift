@@ -45,9 +45,7 @@ struct Movie: Decodable {
         return URL(string: "https://image.tmdb.org/t/p/w500" + path)
     }
     
-    var displayedTitle: String {
-        originalTitle == title ? title : "\(title)(\(originalTitle))"
-    }
+    var displayedTitle: String { originalTitle == title ? title : "\(title)(\(originalTitle))" }
     
     var displayedReleaseDate: String {
         let dateFormatter = DateFormatter()
@@ -57,7 +55,7 @@ struct Movie: Decodable {
         return dateFormatter.string(from: date)
     }
     
-    var displayedRating: Int {
-        voteCount == 0 ? 0 : Int(voteAverage) / voteCount
-    }
+    var displayedRating: Int { voteCount == 0 ? 0 : Int(voteAverage) / voteCount }
+    
+    var webUrl: URL { URL(string: "https://www.themoviedb.org/movie/\(id)")! }
 }

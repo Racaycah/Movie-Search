@@ -28,9 +28,9 @@ enum APIRequest {
                 URLQueryItem(name: "page", value: "\(page)"),
                 URLQueryItem(name: "include_adult", value: "false")
             ])
-        case .movieDetails(id: let id):
+        case .movieDetails:
             queryItems.append(contentsOf: [
-                URLQueryItem(name: "id", value: "\(id)")
+                URLQueryItem(name: "language", value: "en-US")
             ])
         }
         
@@ -40,7 +40,7 @@ enum APIRequest {
     private var path: String {
         switch self {
         case .search: return "/3/search/movie"
-        default: return ""
+        case .movieDetails(id: let id): return "/3/movie/\(id)"
         }
     }
     
@@ -75,7 +75,7 @@ class NetworkManager {
     private init() {}
     
     
-    private func request<T: Decodable>(_ requestType: APIRequest, decodingTo: T.Type, completion: @escaping (Result<T, RequestError>) -> Void) {
+    private func request<T: Decodable>(_ requestType: APIRequest, completion: @escaping (Result<T, RequestError>) -> Void) {
         guard let url = requestType.url else { completion(.failure(.cantConstructUrl)); return }
         
         var urlRequest = URLRequest(url: url)
@@ -114,6 +114,10 @@ class NetworkManager {
     }
     
     func search(query: String, page: Int, completion: @escaping (Result<MovieListResult, RequestError>) -> Void) {
-        request(.search(query: query, page: page), decodingTo: MovieListResult.self, completion: completion)
+        request(.search(query: query, page: page), completion: completion)
+    }
+    
+    func movieDetails(id: Int, completion: @escaping (Result<MovieDetails, RequestError>) -> Void) {
+        request(.movieDetails(id: id), completion: completion)
     }
 }

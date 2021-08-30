@@ -40,6 +40,8 @@ class MovieCollectionViewCell: UICollectionViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()
+        contentView.layer.cornerRadius = 8
+        contentView.clipsToBounds = true
         posterImageView.layer.cornerRadius = 8
         posterImageView.clipsToBounds = true
         watchStateButton.backgroundColor = UIColor.systemIndigo

@@ -10,6 +10,8 @@ import Combine
 
 class MovieSearchViewController: UIViewController {
     
+    // MARK: - Outlets & Views
+    
     @IBOutlet weak var moviesCollectionView: UICollectionView!
     
     private lazy var emptyView: UIView = {
@@ -43,9 +45,13 @@ class MovieSearchViewController: UIViewController {
         return label
     }()
     
+    // MARK: - Properties
+    
     let searchController = UISearchController(searchResultsController: nil)
     
     let viewModel = MovieSearchViewModel()
+    
+    // MARK: - Life Cycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -56,11 +62,15 @@ class MovieSearchViewController: UIViewController {
         bindViewModel()
     }
     
+    // MARK: - Methods
+    
     func bindViewModel() {
         viewModel.moviesPublisher.sink { movies in self.moviesFetched(movies) }.store(in: &self.viewModel.subscriptions)
         viewModel.showEmptyViewPublisher.sink { show in self.showEmptyView(show) }.store(in: &self.viewModel.subscriptions)
         viewModel.emptyViewEmojiPublisher.sink { emoji in self.changeEmptyEmoji(emoji) }.store(in: &self.viewModel.subscriptions)
         viewModel.emptyViewTextPublisher.sink { text in self.changeEmptyText(text) }.store(in: &self.viewModel.subscriptions)
+        viewModel.movieDetailsPublisher.sink { details in self.presentMovieDetails(details) }.store(in: &self.viewModel.subscriptions)
+        viewModel.errorPublisher.sink { errorText in self.presentError(errorText) }.store(in: &self.viewModel.subscriptions)
         
         viewModel.sendEmptyState(.emptyInput)
     }
@@ -87,6 +97,25 @@ class MovieSearchViewController: UIViewController {
     func changeEmptyText(_ text: String) {
         DispatchQueue.main.async {
             self.emptyTextLabel.text = text
+        }
+    }
+    
+    func presentMovieDetails(_ details: MovieDetails) {
+        DispatchQueue.main.async {
+            let detailsVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "MovieDetailsViewController") as! MovieDetailsViewController
+            detailsVC.viewModel.details = details
+            self.navigationController?.pushViewController(detailsVC, animated: true)
+        }
+    }
+    
+    func presentError(_ errorText: String) {
+        let alertController = UIAlertController(title: "Something went wrong", message: errorText, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: { [weak alertController] _ in
+            alertController?.dismiss(animated: true, completion: nil)
+        }))
+        
+        DispatchQueue.main.async {
+            self.present(alertController, animated: true, completion: nil)
         }
     }
 
@@ -118,8 +147,6 @@ extension MovieSearchViewController {
         moviesCollectionView.register(cell: MovieCollectionViewCell.self)
         moviesCollectionView.delegate = self
         moviesCollectionView.dataSource = self
-        
-        //moviesCollectionView.isHidden = true
     }
     
     func configureEmptyView() {
@@ -132,8 +159,6 @@ extension MovieSearchViewController {
             emptyView.trailingAnchor.constraint(greaterThanOrEqualTo: view.trailingAnchor, constant: 8),
             emptyView.heightAnchor.constraint(equalToConstant: 60)
         ])
-        
-        //emptyView.isHidden = false
     }
 }
 
@@ -167,5 +192,9 @@ extension MovieSearchViewController: UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
         8
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        viewModel.movieDetails(forIndex: indexPath.item)
     }
 }

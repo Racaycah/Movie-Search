@@ -8,7 +8,7 @@
 import UIKit
 import Combine
 
-class MovieSearchViewModel: NSObject {
+class MovieSearchViewModel {
     
     struct EmptyState {
         let emoji: String
@@ -27,6 +27,8 @@ class MovieSearchViewModel: NSObject {
     let showEmptyViewPublisher = PassthroughSubject<Bool, Never>()
     let emptyViewEmojiPublisher = PassthroughSubject<String, Never>()
     let emptyViewTextPublisher = PassthroughSubject<String, Never>()
+    let movieDetailsPublisher = PassthroughSubject<MovieDetails, Never>()
+    let errorPublisher = PassthroughSubject<String, Never>()
     
     var subscriptions = Set<AnyCancellable>()
     
@@ -50,6 +52,19 @@ class MovieSearchViewModel: NSObject {
                 self.moviesPublisher.send(movieResult.movies)
             case .failure:
                 self.sendEmptyState(.error)
+            }
+        }
+    }
+    
+    func movieDetails(forIndex index: Int) {
+        let id = movies[index].id
+        
+        NetworkManager.shared.movieDetails(id: id) { result in
+            switch result {
+            case .success(let details):
+                self.movieDetailsPublisher.send(details)
+            case .failure(let error):
+                self.errorPublisher.send(error.localizedDescription)
             }
         }
     }
