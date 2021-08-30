@@ -6,28 +6,78 @@
 //
 
 import XCTest
+import Combine
 @testable import Movie_Search
 
 class Movie_SearchTests: XCTestCase {
+    
+    private var cancellables: Set<AnyCancellable>!
 
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    let lionKingSearchQuery = "Lion king"
+    let emptyResultQuery = "Ftestrotsgkt"
+    
+    override func setUp() {
+        super.setUp()
+        cancellables = []
     }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-    }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+    
+    func testSearchSucceeds() {
+        let sut = MovieSearchViewModel()
+        var movies = [Movie]()
+        
+        let expectation = self.expectation(description: "Should fetch movies")
+        
+        sut.moviesPublisher.sink { completion in
+            switch completion {
+            case .finished:
+                break
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
+            }
+            
+            expectation.fulfill()
+        } receiveValue: { fetchedMovies in
+            movies = fetchedMovies
+            expectation.fulfill()
         }
+        .store(in: &cancellables)
+
+        sut.search(withQuery: lionKingSearchQuery)
+        
+        waitForExpectations(timeout: 10)
+        
+        XCTAssertFalse(movies.isEmpty)
+    }
+    
+    func testRandomTextReturnsEmptyResult() {
+        let sut = MovieSearchViewModel()
+        var showEmptyView: Bool = false
+        
+        let expectation = self.expectation(description: "Should fetch no movies and call showEmptyView")
+        
+        sut.showEmptyViewPublisher.sink { completion in
+            switch completion {
+            case .finished:
+                break
+            case .failure(let error):
+                XCTFail(error.localizedDescription)
+            }
+            
+            expectation.fulfill()
+        } receiveValue: { empty in
+            showEmptyView = empty
+            
+            if empty {
+                expectation.fulfill()
+            }
+        }
+        .store(in: &cancellables)
+
+        sut.search(withQuery: emptyResultQuery)
+        
+        waitForExpectations(timeout: 10)
+        
+        XCTAssertTrue(showEmptyView)
     }
 
 }
