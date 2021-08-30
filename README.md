@@ -21,3 +21,4 @@ Clone the project and run it in a simulator of your choice.
 
 - There are 3 `TODO`s in the project, 2 of which are about saving and loading the `WATCHED` state of movies and one about pagination.
 - `Watched / Not Watched` buttons do not look good with their current width.
+- `RatingView` was supposed to be used to display the overall rating of a movie in details screen, but I couldn't make it draw like I wanted and didn't want to waste too much time trying to fix.
